@@ -3,7 +3,7 @@ import uuid
 from typing import Optional
 
 import uvicorn
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from fastapi import APIRouter
 from pydantic import BaseModel, Field
 from sqlalchemy import select

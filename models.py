@@ -3,8 +3,10 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import declarative_base, sessionmaker
 import uuid
 
+from config import DB_USER, DB_PASS, DB_HOST, DB_PORT, DB_NAME
+
 Base = declarative_base()
-engine = create_async_engine('postgresql+asyncpg://postgres:postgres@localhost:5432/money_db', echo=True)
+engine = create_async_engine(f'postgresql+asyncpg://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}', echo=True)
 async_session = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
 
 
