@@ -13,7 +13,8 @@ from src.auth.auth import auth_backend
 from .database import async_session
 from src.auth.schemas import UserRead, UserCreate
 from src.auth.user_manager import get_user_manager
-from .auth.models import User, Transaction
+from .auth.models import User
+from .transactions.models import Transaction
 
 app = FastAPI(title='Money API')
 
