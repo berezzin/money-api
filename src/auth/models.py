@@ -1,7 +1,7 @@
 from fastapi_users_db_sqlalchemy import SQLAlchemyBaseUserTableUUID, GUID
 from sqlalchemy import Column, String, TIMESTAMP, Numeric, text, ForeignKey, Integer
 
-from auth.database import Base
+from src.database import Base
 
 
 class User(SQLAlchemyBaseUserTableUUID, Base):

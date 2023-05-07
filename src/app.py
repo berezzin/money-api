@@ -9,11 +9,11 @@ from fastapi_users import FastAPIUsers
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 
-from auth.auth import auth_backend
-from auth.database import async_session
-from auth.schemas import UserRead, UserCreate
-from auth.user_manager import get_user_manager
-from models import User, Transaction
+from src.auth.auth import auth_backend
+from .database import async_session
+from src.auth.schemas import UserRead, UserCreate
+from src.auth.user_manager import get_user_manager
+from .auth.models import User, Transaction
 
 app = FastAPI(title='Money API')
 
