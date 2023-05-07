@@ -3,12 +3,16 @@ import uuid
 from typing import Optional
 
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi import APIRouter
+from fastapi_users import FastAPIUsers
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 
+from auth.auth import auth_backend
 from auth.database import async_session
+from auth.schemas import UserRead, UserCreate
+from auth.user_manager import get_user_manager
 from models import User, Transaction
 
 app = FastAPI(title='Money API')
@@ -69,8 +73,31 @@ async def add_transaction(transaction_data: TransactionSchema):
 
 main_router = APIRouter()
 
+fastapi_users = FastAPIUsers[User, uuid.UUID](
+    get_user_manager,
+    [auth_backend],
+)
+
+current_user = fastapi_users.current_user()
+
+
+@main_router.get("/protected-route")
+async def protected_route(user: User = Depends(current_user)):
+    return f"Hello, {user.username}"
+
+
 main_router.include_router(user_router, prefix='/user', tags=['Users'])
 main_router.include_router(transaction_router, prefix='/transaction', tags=['Transactions'])
+main_router.include_router(
+    fastapi_users.get_auth_router(auth_backend),
+    prefix="/auth/jwt",
+    tags=["auth"],
+)
+main_router.include_router(
+    fastapi_users.get_register_router(UserRead, UserCreate),
+    prefix="/auth",
+    tags=["auth"],
+)
 app.include_router(main_router)
 
 if __name__ == '__main__':
