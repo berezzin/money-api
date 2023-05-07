@@ -1,21 +1,13 @@
-from sqlalchemy import Column, UUID, String, Boolean, TIMESTAMP, Numeric, text, ForeignKey, Integer
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.orm import declarative_base, sessionmaker
-import uuid
+from fastapi_users_db_sqlalchemy import SQLAlchemyBaseUserTableUUID, GUID
+from sqlalchemy import Column, String, TIMESTAMP, Numeric, text, ForeignKey, Integer
 
-from config import DB_USER, DB_PASS, DB_HOST, DB_PORT, DB_NAME
-
-Base = declarative_base()
-engine = create_async_engine(f'postgresql+asyncpg://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}', echo=True)
-async_session = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
+from auth.database import Base
 
 
-class User(Base):
+class User(SQLAlchemyBaseUserTableUUID, Base):
     __tablename__ = 'users'
 
-    user_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     username = Column(String(length=20), nullable=False)
-    is_admin = Column(Boolean, default=False)
     join_date = Column(TIMESTAMP, server_default=text('CURRENT_TIMESTAMP'))
     balance = Column(Numeric(precision=10, scale=3, asdecimal=False), nullable=False, server_default='0')
 
@@ -24,7 +16,7 @@ class Transaction(Base):
     __tablename__ = 'transactions'
 
     transaction_id = Column(Integer, primary_key=True)
-    user_id = Column(UUID(as_uuid=True), ForeignKey('users.user_id'))
+    user_id = Column(GUID, ForeignKey('users.id'))
     transaction_comment = Column(String(length=50), nullable=True)
     transaction_date = Column(TIMESTAMP, server_default=text('CURRENT_TIMESTAMP'))
     transaction_amount = Column(Numeric(precision=10, scale=3, asdecimal=False), nullable=False, server_default='0')

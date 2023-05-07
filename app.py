@@ -8,7 +8,8 @@ from fastapi import APIRouter
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 
-from models import async_session, User, Transaction
+from auth.database import async_session
+from models import User, Transaction
 
 app = FastAPI(title='Money API')
 
@@ -16,7 +17,7 @@ user_router = APIRouter()
 
 
 class UserSchema(BaseModel):
-    user_id: uuid.UUID
+    id: uuid.UUID
     username: str
     join_date: datetime.datetime
     balance: float
@@ -26,19 +27,19 @@ class UserSchema(BaseModel):
 
 
 @user_router.post('/')
-async def create_user(username: str):
+async def create_user(username: str, email: str, hashed_password: str):
     async with async_session() as session:
         session.begin()
-        new_user = User(username=username)
+        new_user = User(username=username, email=email, hashed_password=hashed_password)
         session.add(new_user)
         await session.commit()
-        return {'Id': new_user.user_id}
+        return {'Id': new_user.id}
 
 
 @user_router.get('/', response_model=Optional[UserSchema])
 async def get_user(user_id: str) -> UserSchema | None:
     async with async_session() as session:
-        stmt = select(User).where(User.user_id == user_id)
+        stmt = select(User).where(User.id == user_id)
         result = await session.scalars(stmt)
         user = result.first()
         return user
