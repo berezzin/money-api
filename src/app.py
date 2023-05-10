@@ -14,7 +14,8 @@ from .database import async_session
 from src.auth.schemas import UserRead, UserCreate
 from src.auth.user_manager import get_user_manager
 from .auth.models import User
-from .transactions.models import Transaction
+
+from .transactions.router import router as transaction_router
 
 app = FastAPI(title='Money API')
 
@@ -48,28 +49,6 @@ async def get_user(user_id: str) -> UserSchema | None:
         result = await session.scalars(stmt)
         user = result.first()
         return user
-
-
-transaction_router = APIRouter()
-
-
-class TransactionSchema(BaseModel):
-    user_id: str = Field(min_length=32, max_length=36)
-    transaction_comment: str | None = Field(max_length=50, default=None)
-    transaction_amount: float = 0
-    transaction_category: int
-
-
-@transaction_router.post('/add')
-async def add_transaction(transaction_data: TransactionSchema):
-    async with async_session() as session:
-        new_transaction = Transaction(user_id=transaction_data.user_id,
-                                      transaction_comment=transaction_data.transaction_comment,
-                                      transaction_amount=transaction_data.transaction_amount,
-                                      transaction_category=transaction_data.transaction_category)
-        session.add(new_transaction)
-        await session.commit()
-        return {'Status': 200}
 
 
 main_router = APIRouter()
