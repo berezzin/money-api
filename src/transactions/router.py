@@ -1,4 +1,7 @@
+import time
+
 from fastapi import APIRouter, Depends
+from fastapi_cache.decorator import cache
 
 from src.database import async_session
 from src.transactions.models import Transaction
@@ -19,3 +22,10 @@ async def add_transaction(transaction_data: TransactionSchema, user: User = Depe
         session.add(new_transaction)
         await session.commit()
         return {'Status': 200}
+
+
+@router.get('/')
+@cache(expire=5)
+def long_cached_operation():
+    time.sleep(2)
+    return {'Status': 'OK'}

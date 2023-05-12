@@ -10,3 +10,5 @@ DB_USER = os.getenv('DB_USER')
 DB_PASS = os.getenv('DB_PASS')
 
 SECRET_AUTH = os.getenv('SECRET_AUTH')
+
+REDIS_HOST = os.getenv('REDIS_HOST')
