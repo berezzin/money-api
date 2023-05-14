@@ -5,10 +5,10 @@ from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
 from redis import asyncio as aioredis
 
-from .config import REDIS_HOST, REDIS_PORT
-from .auth.router import router as auth_router
-from .transactions.router import router as transaction_router
-from .tasks.router import router as report_router
+from src.config import REDIS_HOST, REDIS_PORT
+from src.auth.router import router as auth_router
+from src.transactions.router import router as transaction_router
+from src.tasks.router import router as report_router
 
 app = FastAPI(title='Money API')
 
