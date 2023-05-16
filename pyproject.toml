@@ -1,4 +1,7 @@
 [tool.pytest.ini_options]
+filterwarnings = [
+    "ignore:.*U.*mode is deprecated:DeprecationWarning"
+]
 pythonpath = [
     '.', 'src',
 ]
