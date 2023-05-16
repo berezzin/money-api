@@ -1,5 +1,4 @@
 import time
-from typing import AsyncGenerator
 
 from fastapi import APIRouter, Depends
 from fastapi_cache.decorator import cache
