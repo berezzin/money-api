@@ -1,17 +1,28 @@
-from sqlalchemy import insert, select
-
-from src.transactions.models import Category
-from tests.conftest import async_session
+from httpx import AsyncClient
 
 
-async def test_add_category():
-    async with async_session() as session:
-        stmt = insert(Category).values(category_id=1, category_name='Food')
-        await session.execute(stmt)
-        await session.commit()
+async def test_register_user(ac: AsyncClient):
+    response = await ac.post('/auth/register', json={
+        "email": "some_mail@gmail.com",
+        "password": "string",
+        "is_active": True,
+        "is_superuser": True,
+        "is_verified": True,
+        "username": "some_username"
+    })
+    response_data = response.json()
+    assert response.status_code == 201
+    assert response_data.get('email') == "some_mail@gmail.com"
+    assert response_data.get('is_active') is True
+    assert response_data.get('is_superuser') is False
+    assert response_data.get('is_verified') is False
+    assert response_data.get('username') == "some_username"
 
-        query = select(Category)
-        result = await session.scalars(query)
-        new_category: Category = result.one_or_none()
-        assert new_category.category_id == 1
-        assert new_category.category_name == 'Food'
+
+async def test_user_login(ac: AsyncClient):
+    response = await ac.post('/auth/jwt/login', data={
+        'username': 'some_mail@gmail.com',
+        "password": "string"
+    })
+
+    assert response.status_code == 204
