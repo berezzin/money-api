@@ -22,3 +22,5 @@ REDIS_PORT = os.getenv('REDIS_PORT')
 
 SMTP_USER = os.getenv('SMTP_USER')
 SMTP_PASSWORD = os.getenv('SMTP_PASSWORD')
+
+TEST_MODE = os.getenv('TEST_MODE', default=False)

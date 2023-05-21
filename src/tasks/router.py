@@ -9,7 +9,7 @@ router = APIRouter()
 
 @router.get('/transactions')
 async def send_transaction_report(user: User = Depends(current_user)):
-    send_email_report_transactions.delay(user.id)
+    task = send_email_report_transactions.delay(user.id)
     return {'Status': 200,
             'data': 'Email has been sent',
-            'details': None}
+            'details': {'task_id': task.id}}

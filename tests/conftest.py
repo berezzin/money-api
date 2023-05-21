@@ -1,4 +1,5 @@
 import asyncio
+import os
 from typing import AsyncGenerator
 
 import pytest
@@ -33,6 +34,11 @@ async def prepare_database():
     yield
     async with engine_test.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
+
+
+@pytest.fixture(scope='session', autouse=True)
+async def mode_env():
+    os.environ['TEST_MODE'] = 'True'
 
 
 @pytest.fixture(scope='session')
