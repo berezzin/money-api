@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
 from redis import asyncio as aioredis
+from fastapi.middleware.cors import CORSMiddleware
 
 from src.config import REDIS_HOST, REDIS_PORT
 from src.auth.router import router as auth_router
@@ -19,6 +20,19 @@ main_router.include_router(transaction_router, prefix='/transaction', tags=['Tra
 main_router.include_router(report_router, prefix='/report', tags=['Reports'])
 
 app.include_router(main_router)
+
+origins = [
+    "http://localhost:8000",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "OPTIONS", "DELETE", "PATCH", "PUT"],
+    allow_headers=["Content-Type", "Set-Cookie", "Access-Control-Allow-Headers", "Access-Control-Allow-Origin",
+                   "Authorization"],
+)
 
 
 @app.on_event("startup")
