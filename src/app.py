@@ -5,6 +5,7 @@ from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
 from redis import asyncio as aioredis
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from src.config import REDIS_HOST, REDIS_PORT
 from src.auth.router import router as auth_router
@@ -13,6 +14,8 @@ from src.tasks.router import router as report_router
 from src.pages.router import router as pages_router
 
 app = FastAPI(title='Money API')
+
+app.mount("/src/static", StaticFiles(directory="src/static"), name="static")
 
 main_router = APIRouter()
 
