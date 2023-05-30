@@ -17,3 +17,8 @@ def get_base_page(request: Request):
 @router.get('/search/{category_id}')
 def get_search_page(request: Request, transactions=Depends(get_transactions_by_category_id)):
     return templates.TemplateResponse('search.html', {'request': request, 'transactions': transactions.get('data')})
+
+
+@router.get('/support/chat')
+def get_support_chat_page(request: Request):
+    return templates.TemplateResponse('support_chat.html', {'request': request})

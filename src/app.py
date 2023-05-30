@@ -12,6 +12,7 @@ from src.auth.router import router as auth_router
 from src.transactions.router import router as transaction_router
 from src.tasks.router import router as report_router
 from src.pages.router import router as pages_router
+from src.chat.router import router as chat_router
 
 app = FastAPI(title='Money API')
 
@@ -23,6 +24,7 @@ main_router.include_router(auth_router, prefix='/auth', tags=['Auth'])
 main_router.include_router(transaction_router, prefix='/transaction', tags=['Transactions'])
 main_router.include_router(report_router, prefix='/report', tags=['Reports'])
 main_router.include_router(pages_router, prefix='/pages', tags=['Pages'])
+main_router.include_router(chat_router, prefix='/chat', tags=['Chats'])
 
 app.include_router(main_router)
 
