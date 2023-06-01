@@ -1,0 +1,69 @@
+version: '3.0'
+services:
+
+  money_app:
+    container_name: 'money_app'
+    build:
+      context: .
+    env_file:
+      - .env-prod
+    command: [ '/money_app/docker/app.sh' ]
+    ports:
+      - '8000:8000'
+    depends_on:
+      - postgres_db
+      - redis
+    networks:
+      - custom
+
+  celery:
+    container_name: 'celery_money_app'
+    build:
+      context: .
+    env_file:
+      - .env-prod
+    command: [ '/money_app/docker/celery.sh', 'celery' ]
+    depends_on:
+      - money_app
+    networks:
+      - custom
+
+
+  flower:
+    container_name: 'flower_money_app'
+    build:
+      context: .
+    env_file:
+      - .env-prod
+    command: [ '/money_app/docker/celery.sh', 'flower' ]
+    depends_on:
+      - celery
+    ports:
+      - '8888:5555'
+    networks:
+      - custom
+
+  postgres_db:
+    container_name: 'postgres_db'
+    image: postgres:14.7-alpine
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - ${DB_PORT}:5432
+    networks:
+      - custom
+
+  redis:
+    container_name: 'redis'
+    image: redis:alpine
+    env_file:
+      - .env
+    ports:
+      - ${REDIS_PORT}:${REDIS_PORT}
+    networks:
+      - custom
+
+networks:
+  custom:
+    driver: bridge
