@@ -23,7 +23,10 @@
 
     let client_id = Date.now()
     document.querySelector("#ws-id").textContent = client_id;
-    let ws = new WebSocket(`ws://localhost:8000/chat/ws/${client_id}`);
+
+    let current_host = window.location.host;
+
+    let ws = new WebSocket(`ws://${current_host}/chat/ws/${client_id}`);
     ws.onmessage = function (event) {
         appendMessage(event.data)
     };
