@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from fastapi.websockets import WebSocket
 from fastapi.websockets import WebSocketDisconnect
 
@@ -9,13 +9,13 @@ router = APIRouter()
 manager = ConnectionManager()
 
 
-@router.websocket("/ws/{client_id}")
-async def support_chat_websocket(websocket: WebSocket, client_id: int):
+@router.websocket("/ws/{username}")
+async def support_chat_websocket(websocket: WebSocket, username: str):
     await manager.connect(websocket)
     try:
         while True:
             data = await websocket.receive_text()
-            await manager.broadcast(f"Client #{client_id} says: {data}")
+            await manager.broadcast(f"Client <b>{username}</b> says: {data}")
     except WebSocketDisconnect:
         manager.disconnect(websocket)
-        await manager.broadcast(f"Client #{client_id} left the chat")
+        await manager.broadcast(f"Client #{username} left the chat")
