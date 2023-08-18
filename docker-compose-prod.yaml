@@ -11,8 +11,10 @@ services:
     ports:
       - '8000:8000'
     depends_on:
-      - postgres_db
-      - redis
+      postgres_db:
+        condition: service_healthy
+      redis:
+        condition: service_started
     networks:
       - custom
 
@@ -48,7 +50,16 @@ services:
     image: postgres:14.7-alpine
     restart: always
     env_file:
-      - .env
+      - .env-prod
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready" ]
+      interval: 1s
+      timeout: 1s
+      retries: 10
     ports:
       - ${DB_PORT}:5432
     networks:
@@ -58,9 +69,9 @@ services:
     container_name: 'redis'
     image: redis:alpine
     env_file:
-      - .env
+      - .env-prod
     ports:
-      - ${REDIS_PORT}:${REDIS_PORT}
+      - ${REDIS_PORT}:6379
     networks:
       - custom
 

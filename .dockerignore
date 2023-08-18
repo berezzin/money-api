@@ -1,0 +1,8 @@
+.env
+.env-prod
+.gitignore
+.pytest_cache
+.idea
+__pycache__
+venv
+.git
