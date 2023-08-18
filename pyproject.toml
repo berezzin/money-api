@@ -1,8 +1,0 @@
-[tool.pytest.ini_options]
-filterwarnings = [
-    "ignore::DeprecationWarning"
-]
-pythonpath = [
-    '.', 'src',
-]
-asyncio_mode = 'auto'

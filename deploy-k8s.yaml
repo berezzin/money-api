@@ -1,0 +1,280 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: money-app-deployment
+  labels:
+    app: money-app-deployment
+spec:
+  selector:
+    matchLabels:
+      app: money-app-deployment
+  template:
+    metadata:
+      name: money-app-deployment
+      labels:
+        app: money-app-deployment      # service will connect by this labels
+    spec:
+      initContainers:
+        - name: wait-for-postgres-db
+          image: postgres:14.7-alpine
+          command: [ 'sh', '-c', 'until pg_isready -h my-postgres-service -p 5432; do sleep 1; done;' ]
+          env:
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: DB_NAME
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: DB_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: DB_PASS
+      containers:
+        - name: money-app-deployment
+          image: berezzin/money-api
+          command: [ '/money_app/docker/app.sh' ]
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - secretRef:
+                name: app-secrets
+      restartPolicy: Always
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: money-app-deployment-autoscaling
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v2
+    kind: Deployment
+    name: money-app-deployment
+  minReplicas: 4
+  maxReplicas: 6
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-autoscaling-money-app-service
+  labels:
+    env: prod
+spec:
+  selector:
+    app: money-app-deployment      # Selecting PODs with those Labels
+  ports:
+    - name: app-listener
+      protocol: TCP
+      port: 80  # Port on Load Balancer
+      targetPort: 8000  # Port on Pod
+  type: LoadBalancer
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres-db-statefulset
+spec:
+  replicas: 1
+  serviceName: postgres-db
+  selector:
+    matchLabels:
+      app: postgres-db
+  template:
+    metadata:
+      labels:
+        app: postgres-db
+    spec:
+      containers:
+        - name: postgres-db
+          image: postgres:14.7-alpine
+          env:
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: DB_NAME
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: DB_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: DB_PASS
+          ports:
+            - containerPort: 5432
+          volumeMounts:
+            - name: postgres-db-data
+              mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-db-data
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        resources:
+          requests:
+            storage: 5Gi
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-postgres-service
+  labels:
+    env: prod
+spec:
+  selector:
+    app: postgres-db      # Selecting PODs with those Labels
+  ports:
+    - name: postgres-listener
+      protocol: TCP
+      port: 5432  # Port on Load Balancer
+      targetPort: 5432  # Port on Pod
+  type: LoadBalancer
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: redis-statefulset
+spec:
+  replicas: 1
+  serviceName: redis
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+        - name: redis
+          image: redis:alpine
+          envFrom:
+            - secretRef:
+                name: app-secrets
+          ports:
+            - containerPort: 6379
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-redis-service
+  labels:
+    env: prod
+spec:
+  selector:
+    app: redis      # Selecting PODs with those Labels
+  ports:
+    - name: redis-listener
+      protocol: TCP
+      port: 6379  # Port on Load Balancer
+      targetPort: 6379  # Port on Pod
+  type: ClusterIP
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: celery-deployment
+  labels:
+    app: celery-deployment
+spec:
+  selector:
+    matchLabels:
+      app: celery-deployment
+  template:
+    metadata:
+      name: celery-deployment
+      labels:
+        app: celery-deployment      # service will connect by this labels
+    spec:
+      initContainers:
+        - name: wait-for-money-app
+          image: busybox:latest
+          command: [ 'sh', '-c', 'until nc -z my-autoscaling-money-app-service 80; do sleep 1; done;' ]
+      containers:
+        - name: celery-deployment
+          image: berezzin/money-api
+          command: [ '/money_app/docker/celery.sh' ]
+          args: [ 'celery' ]
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - secretRef:
+                name: app-secrets
+      restartPolicy: Always
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flower-deployment
+  labels:
+    app: flower-deployment
+spec:
+  selector:
+    matchLabels:
+      app: flower-deployment
+  template:
+    metadata:
+      name: flower-deployment
+      labels:
+        app: flower-deployment      # service will connect by this labels
+    spec:
+      containers:
+        - name: flower-deployment
+          image: berezzin/money-api
+          command: [ '/money_app/docker/celery.sh' ]
+          args: [ 'flower' ]
+          ports:
+            - containerPort: 5555
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - secretRef:
+                name: app-secrets
+      restartPolicy: Always
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-autoscaling-flower-service
+  labels:
+    env: prod
+spec:
+  selector:
+    app: flower-deployment      # Selecting PODs with those Labels
+  ports:
+    - name: flower-listener
+      protocol: TCP
+      port: 8888  # Port on Load Balancer
+      targetPort: 5555  # Port on Pod
+  type: LoadBalancer
+
+
+
