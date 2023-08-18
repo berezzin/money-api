@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flower-deployment
+  labels:
+    app: flower-deployment
+spec:
+  selector:
+    matchLabels:
+      app: flower-deployment
+  template:
+    metadata:
+      name: flower-deployment
+      labels:
+        app: flower-deployment      # service will connect by this labels
+    spec:
+      containers:
+        - name: flower-deployment
+          image: berezzin/money-api
+          command: [ '/money_app/docker/celery.sh' ]
+          args: [ 'flower' ]
+          ports:
+            - containerPort: 5555
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - secretRef:
+                name: app-secrets
+      restartPolicy: Always
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-autoscaling-flower-service
+  labels:
+    env: prod
+spec:
+  selector:
+    app: flower-deployment      # Selecting PODs with those Labels
+  ports:
+    - name: flower-listener
+      protocol: TCP
+      port: 8888  # Port on Load Balancer
+      targetPort: 5555  # Port on Pod
+  type: LoadBalancer

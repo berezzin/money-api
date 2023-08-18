@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres-db-statefulset
+spec:
+  replicas: 1
+  serviceName: postgres-db
+  selector:
+    matchLabels:
+      app: postgres-db
+  template:
+    metadata:
+      labels:
+        app: postgres-db
+    spec:
+      containers:
+        - name: postgres-db
+          image: postgres:14.7-alpine
+          env:
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: DB_NAME
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: DB_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: DB_PASS
+          ports:
+            - containerPort: 5432
+          volumeMounts:
+            - name: postgres-db-data
+              mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-db-data
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        resources:
+          requests:
+            storage: 5Gi
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-postgres-service
+  labels:
+    env: prod
+spec:
+  selector:
+    app: postgres-db      # Selecting PODs with those Labels
+  ports:
+    - name: postgres-listener
+      protocol: TCP
+      port: 5432  # Port on Load Balancer
+      targetPort: 5432  # Port on Pod
+  type: LoadBalancer

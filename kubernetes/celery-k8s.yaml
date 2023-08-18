@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: celery-deployment
+  labels:
+    app: celery-deployment
+spec:
+  selector:
+    matchLabels:
+      app: celery-deployment
+  template:
+    metadata:
+      name: celery-deployment
+      labels:
+        app: celery-deployment      # service will connect by this labels
+    spec:
+      initContainers:
+        - name: wait-for-money-app
+          image: busybox:latest
+          command: [ 'sh', '-c', 'until nc -z my-autoscaling-money-app-service 80; do sleep 1; done;' ]
+          imagePullPolicy: IfNotPresent
+      containers:
+        - name: celery-deployment
+          image: berezzin/money-api
+          command: [ '/money_app/docker/celery.sh' ]
+          args: [ 'celery' ]
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - secretRef:
+                name: app-secrets
+      restartPolicy: Always
