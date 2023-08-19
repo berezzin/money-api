@@ -39,7 +39,7 @@ spec:
         - name: money-app-deployment
           image: berezzin/money-api
           command: [ '/money_app/docker/app.sh' ]
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           ports:
             - containerPort: 8000
           envFrom:

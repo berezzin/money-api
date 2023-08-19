@@ -6,6 +6,6 @@
 __pycache__
 venv
 .git
-deploy-k8s.yaml
+kubernetes
 docker-compose-prod.yaml
 docker-compose.yaml
