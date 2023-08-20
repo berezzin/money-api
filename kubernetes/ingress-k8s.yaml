@@ -4,8 +4,14 @@ metadata:
   name: ingress-hosts
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
 spec:
   ingressClassName: nginx
+  tls:
+    - hosts:
+        - www.berezzin.by
+        - flower.berezzin.by
+      secretName: app-tls
   rules:
     - host: www.berezzin.by
       http:
