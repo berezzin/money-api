@@ -25,7 +25,7 @@
 
     let current_host = window.location.host;
 
-    let ws = new WebSocket(`ws://${current_host}/chat/ws/${client_username}`);
+    let ws = new WebSocket(`wss://${current_host}/chat/ws/${client_username}`);
     ws.onmessage = function (event) {
         appendMessage(event.data)
     };
