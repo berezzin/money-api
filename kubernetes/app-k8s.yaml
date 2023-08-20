@@ -54,7 +54,7 @@ metadata:
   name: money-app-deployment-autoscaling
 spec:
   scaleTargetRef:
-    apiVersion: apps/v2
+    apiVersion: apps/v1
     kind: Deployment
     name: money-app-deployment
   minReplicas: 4
@@ -88,4 +88,4 @@ spec:
       protocol: TCP
       port: 80  # Port on Load Balancer
       targetPort: 8000  # Port on Pod
-  type: LoadBalancer
+  type: ClusterIP
